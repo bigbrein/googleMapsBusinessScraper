@@ -64,7 +64,6 @@ Google Maps URI: {place.google_maps_uri}
 {place.website_uri and f"Website URI: {place.website_uri}" or "Website URI: none"}
 """ for place in places]
 
-
 client = Places.PlacesClient(client_options=ClientOptions(api_key=PLACES_API_KEY))
 
 res = nearby_search_places(client, 9.0204167, 7.3974722, 1000, 20)
