@@ -1,7 +1,4 @@
-import asyncio
-
 from os import getenv
-from asyncio import run
 
 from google.maps import places_v1 as Places
 from google.type import latlng_pb2 as LatLng
@@ -35,7 +32,7 @@ def nearby_search_places(client: Places.PlacesClient, lat: float, lng: float, ra
     
     nearby_search_request = Places.SearchNearbyRequest(
         location_restriction=location_restriction,
-        included_types=["restaurant", "cafe", "hotel", "educational_institution"],
+        included_types=["restaurant", "cafe", "hotel", "bar"],
         excluded_types=["university"],
         max_result_count=max_results
     )
@@ -43,9 +40,10 @@ def nearby_search_places(client: Places.PlacesClient, lat: float, lng: float, ra
     try:
         response = client.search_nearby(
             request=nearby_search_request, 
-            metadata=(("x-goog-fieldmask", "places.id,places.displayName,places.formattedAddress,places.websiteUri,places.types,places.googleMapsUri"),)
+            metadata=(("x-goog-fieldmask", "places.id,places.displayName,places.shortFormattedAddress,places.formattedAddress,places.nationalPhoneNumber,places.internationalPhoneNumber,places.websiteUri,places.types,places.googleMapsUri"),)
         )
-        return response
+        print(response)
+        return response.places
     except Exception as e:
         print(f"An error occurred while searching for places;\n{e}")
         return
@@ -53,18 +51,23 @@ def nearby_search_places(client: Places.PlacesClient, lat: float, lng: float, ra
 def filter_places_with_website(places: Places.SearchTextResponse):
     return [place for place in places if not place.website_uri]
 
-if __name__ == "__main__":
-    client = Places.PlacesClient(client_options=ClientOptions(api_key=PLACES_API_KEY))
-
-    res = nearby_search_places(client, 9.0204167, 7.3974722, 1000, 20)
-    res = filter_places_with_website(res.places) if res else []
-
-    for place in res:
-        print(
-f"""
-Name: {place.display_name.text}
+def display_place_info(places: list): 
+    return [
+f"""Name: {place.display_name.text}
 ID: {place.id}
 Address: {place.formatted_address}
+Short Address: {place.short_formatted_address}
+{place.national_phone_number and f"National Phone Number: {place.national_phone_number}" or "National Phone Number: none"}
+{place.international_phone_number and f"International Phone Number: {place.international_phone_number}" or "International Phone Number: none"}
 Types: {', '.join(place.types)}
 Google Maps URI: {place.google_maps_uri}
-""");
+{place.website_uri and f"Website URI: {place.website_uri}" or "Website URI: none"}
+""" for place in places]
+
+
+client = Places.PlacesClient(client_options=ClientOptions(api_key=PLACES_API_KEY))
+
+res = nearby_search_places(client, 9.0204167, 7.3974722, 1000, 20)
+# res = filter_places_with_website(res.places) if res else []
+
+print("\n".join(display_place_info(res)))
