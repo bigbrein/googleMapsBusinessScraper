@@ -35,13 +35,15 @@ def nearby_search_places(client: Places.PlacesClient, lat: float, lng: float, ra
     
     nearby_search_request = Places.SearchNearbyRequest(
         location_restriction=location_restriction,
-        included_types=["restaurant", "school", "corporate_office", "university", "bar", "cafe", "hotel"]
+        included_types=["restaurant", "cafe", "hotel", "educational_institution"],
+        excluded_types=["university"],
+        max_result_count=max_results
     )
 
     try:
         response = client.search_nearby(
             request=nearby_search_request, 
-            metadata=(("x-goog-fieldmask", "places.id,places.displayName,places.formattedAddress,places.websiteUri"),)
+            metadata=(("x-goog-fieldmask", "places.id,places.displayName,places.formattedAddress,places.websiteUri,places.types,places.googleMapsUri"),)
         )
         return response
     except Exception as e:
@@ -54,7 +56,15 @@ def filter_places_with_website(places: Places.SearchTextResponse):
 if __name__ == "__main__":
     client = Places.PlacesClient(client_options=ClientOptions(api_key=PLACES_API_KEY))
 
-    res = nearby_search_places(client, 9.0204167, 7.3974722, 1000, 200)
+    res = nearby_search_places(client, 9.0204167, 7.3974722, 1000, 20)
     res = filter_places_with_website(res.places) if res else []
 
-    print(res or "No results found")
+    for place in res:
+        print(
+f"""
+Name: {place.display_name.text}
+ID: {place.id}
+Address: {place.formatted_address}
+Types: {', '.join(place.types)}
+Google Maps URI: {place.google_maps_uri}
+""");
