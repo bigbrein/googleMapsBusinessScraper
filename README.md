@@ -23,9 +23,7 @@ my-project/
     └── utils.py
 ```
 
-_Note:_
-
-Packages installed globally are not accessible by default within the virtual environment. To access them you must include the `--system-site-packages` flag when creating a virtual environment. For existing environments;
+_Note:_ Packages installed globally are not accessible by default within the virtual environment. To access them you must include the `--system-site-packages` flag when creating a virtual environment. For existing environments;
 
 - Locate and open the pyvenv.cfg file in a text editor.
 - Find the line include-system-site-packages = false.
